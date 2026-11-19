@@ -36,6 +36,8 @@ duit. is a friendly, private money app for Android. Track your wallets, see what
 - **Home screen widgets**: Safe to Spend, Wallets, Quick Add, Savings Goal and more.
 - **App Lock and Privacy Mode**: a 6-digit PIN, fingerprint unlock and one tap to hide amounts.
 - **Backup and restore**: password-protected backup files, plus CSV export.
+- **Optional Commission Tracking**: sales, commission and payouts for people paid by commission. Off by default; turn it on in Settings → Optional Features.
+- **Help Centre and feedback**: quick guides, plus a form to report bugs or suggest features.
 
 ## Privacy and offline-first
 
@@ -43,6 +45,8 @@ duit. is a friendly, private money app for Android. Track your wallets, see what
 - duit. connects to the internet only to check GitHub for app updates.
 - Android cloud backup is turned off for duit., so your financial data does not leave your phone that way. Use **Settings > Backup & Restore** to make your own password-protected backup.
 - CSV exports are not encrypted. Keep them somewhere safe.
+- Feedback you choose to send goes to the developer through Google Apps Script and a private Google Sheet.
+- Read the full [Privacy Policy](PRIVACY.md).
 
 ## Download and install
 
@@ -63,6 +67,7 @@ Using duit. Beta? Update from inside the app. Beta 0.1.0-beta.5 and later will o
 
 | Version | Date | Highlights |
 | --- | --- | --- |
+| [1.1.0](https://github.com/erlingdiniy/duit-beta/releases/tag/v1.1.0) | 19 Nov 2026 | Help Centre, feedback, privacy page, optional commission tracking, Support duit. |
 | [1.0.0](https://github.com/erlingdiniy/duit-beta/releases/tag/v1.0.0) | 19 Nov 2026 | First stable release |
 | [0.1.0-beta.5](https://github.com/erlingdiniy/duit-beta/releases/tag/beta-5) | 19 Nov 2026 | Prepares beta apps for the stable release |
 | [0.1.0-beta.4](https://github.com/erlingdiniy/duit-beta/releases/tag/beta-4) | 19 Nov 2026 | Clearer update notes, "Update Now" and "Maybe Later" |
@@ -72,10 +77,10 @@ See all [releases](https://github.com/erlingdiniy/duit-beta/releases) for full n
 
 ## Feedback and bug reports
 
-Found a bug or have an idea? Please [open an issue](https://github.com/erlingdiniy/duit-beta/issues). Include your Android version, your duit. version (**Settings > About**) and the steps to reproduce. Never include your PIN, backup password or real financial details.
+Found a bug or have an idea? Use **Settings → Help & Feedback** in the app, or [open an issue](https://github.com/erlingdiniy/duit-beta/issues). Include your Android version, your duit. version (**Settings > About**) and the steps to reproduce. Never include your PIN, backup password or real financial details.
 
 ## Credits
 
-Made with care by erlingdiniy. App fonts: Fredoka and Nunito, under the SIL Open Font License.
+Made with care by erlingdiniy. Enjoying duit.? You can support it with a coffee from **Settings → Support duit.** (100% optional). App fonts: Fredoka and Nunito, under the SIL Open Font License.
 
 <p align="center"><sub>duit. is distributed as an APK through GitHub Releases. The source code is not published here.</sub></p>
