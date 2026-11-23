@@ -1,98 +1,105 @@
 # duit. Privacy Policy
 
-**Effective date:** 19 November 2026
-**Applies to:** the public duit. Android app (`com.diniy.duit.beta`), version 1.1.0 and later, distributed through GitHub Releases.
+**Effective date:** 23 November 2026  
+**Applies to:** the public duit. Android app (`com.diniy.duit.beta`), version `1.2.0-beta.1` and later, distributed through GitHub Releases (`erlingdiniy/duit-beta`). Personal builds built from source (`com.diniy.duit`) request no `INTERNET` permission and exclude Firebase entirely.
 
-duit. is a personal finance app made by an independent developer (GitHub: **erlingdiniy**). This policy explains what the app stores, what it sends, and the choices you have. It describes how the app actually works today; where something is outside the app's control, we say so.
+duit. is a local-first personal finance app made by an independent developer (GitHub: **erlingdiniy**). This policy explains what the app stores on your device, what limited network connections the public release makes, and the controls you have.
 
 ## 1. Summary
 
-- Your financial records are stored on your phone. There is no account and no cloud sync.
-- duit. goes online for two things only: checking GitHub for app updates, and sending feedback **you choose** to submit.
-- Your balances, transactions, budgets, goals and backups are never sent to the developer.
-- The app contains no advertising and no analytics or tracking SDKs.
+- Your financial records and attached receipts stay on your phone. There is no account and no cloud sync.
+- The public release (`com.diniy.duit.beta`) goes online for three things only:
+  1. Checking GitHub Releases (`erlingdiniy/duit-beta`) for app updates.
+  2. Sending feedback **you choose** to submit.
+  3. Receiving **Developer Broadcasts** (release announcements via Firebase Cloud Messaging topic, with analytics and advertising IDs disabled).
+- Your balances, transactions, budgets, goals, tax notes, receipts, and backups are never sent to the developer.
+- The app contains no advertising, no behavioral tracking, and no analytics SDKs.
 
 ## 2. Data stored on your device
 
-duit. stores your wallets, transactions, budgets, savings goals, bills, PayLater plans, debts, optional commission records and app settings in the app's private storage on your phone (an Android database and preference files).
+duit. stores your wallets, transactions, budgets, savings goals, savings challenges, bills, PayLater plans, debts, optional commission records, Smart Money Calendar reminders, My Tax Pocket relief records, Little Wins Club milestones, and app preferences in the app's private storage on your phone (a local Room SQLite database and DataStore preference files).
 
-- **Not encrypted by duit. itself.** This on-device database is not separately encrypted by the app. On a standard (non-rooted) phone, Android keeps each app's private storage inaccessible to other apps.
-- **Android cloud backup is turned off.** duit. opts out of Android's automatic cloud backup and device-to-device transfer, so your records are not copied to Google Drive that way.
-- **Widgets and notifications** can show amounts on your home screen and lock screen. You can hide them with Privacy Mode, App Lock, or the "hide amounts" notification setting.
+- **Receipt Vault attachments:** When you attach a receipt photo, camera capture, or PDF document in Receipt Vault:
+  - Images are compressed to JPEG and documents/images are copied into the app's private directory (`filesDir/receipts/`), up to **10 MB per file**.
+  - Receipts are never written to your shared photo gallery or public `MediaStore` folders.
+  - Temporary camera capture files stored in the app's private cache during import are deleted after import completes.
+- **On-device storage protection:** The local database and receipt files rely on Android's app-private sandbox rather than separate SQLCipher or per-file database encryption. On a standard (non-rooted) phone, Android keeps app-private storage isolated from other apps.
+- **Android auto-backup is disabled:** `android:allowBackup="false"` is set in the manifest so Android does not automatically copy your database or receipts to Google Drive or device-to-device transfer.
+- **Widgets and notifications** can show amounts on your home screen and lock screen. You can mask amounts using Privacy Mode, App Lock, or notification privacy settings.
 
 ## 3. Security features
 
-- **App Lock (PIN and fingerprint).** You can set a 6-digit PIN and optionally use your phone's fingerprint unlock. Your PIN is never stored as plain text: duit. keeps only a salted, derived value (PBKDF2), protected with a key held in the Android Keystore. Repeated wrong PINs cause a short wait.
-- While App Lock is on, duit. blocks screenshots and hides its screen in the recent-apps view, and hides amounts in widgets and notifications.
-- **Privacy Mode** hides amounts on screen.
+- **App Lock (PIN and biometric):** You can set a 6-digit PIN and optionally enable your device's fingerprint/biometric unlock. Your PIN is never stored in plain text: duit. derives a salted hash (PBKDF2-HMAC-SHA256) protected by a key in the Android Keystore (`AES/GCM/NoPadding`). Repeated failed attempts trigger a cooldown delay.
+- While App Lock is enabled, duit. blocks screenshots (`FLAG_SECURE`), hides app content in the recents overview, and hides amounts in widgets and notifications.
+- **Privacy Mode** masks monetary amounts on screen across the app and home screen widgets.
 
-These features reduce casual access to your data. They are not a guarantee against every threat, for example a compromised or rooted device.
+These safeguards reduce casual access on a lost or shared phone; they do not guarantee protection on a rooted or compromised device.
 
 ## 4. Backups and exports
 
-- **Backups** are files you create in Settings → Backup & Restore and save to a location you choose with Android's file picker. Each backup is encrypted with **AES-256-GCM** using a key derived from a password you set. The developer never receives your backups or passwords, and **a forgotten backup password cannot be recovered**.
-- **Restore** checks the password and the file before changing anything. If restoring fails, your existing data is left as it was. Restoring does not change your PIN.
-- **CSV exports** are plain, unencrypted spreadsheets. Anyone who can open the file can read it.
-- Where you store backup and export files (for example, a cloud drive) is your choice, and that service's own terms apply.
+- **Encrypted backups (`.duitbackup`):** Created in **Settings -> Backup & Restore** and saved wherever you choose through Android's system document picker.
+  - Encrypted with **AES-256-GCM** using a key derived via **PBKDF2-HMAC-SHA256** from the password you enter.
+  - Includes financial records plus Receipt Vault attachment files (up to **12 MB** of raw receipt files per archive, with an overall **32 MB** encrypted backup file cap).
+  - The developer never receives your backups or passwords, and **a forgotten backup password cannot be recovered**.
+- **Atomic restore:** Restoring verifies the password, archive integrity, and receipt staging before replacing your live database or receipt files. If decryption, validation, or file staging fails, your existing records and receipts remain untouched. Restoring does not overwrite your App Lock PIN.
+- **CSV exports:** Plain, unencrypted text spreadsheets intended for external spreadsheet tools. Anyone who can access an exported CSV can read it.
 
 ## 5. Feedback you send
 
-If you use **Settings → Help & Feedback**, duit. sends only:
+If you choose to submit feedback under **Settings -> Help & Feedback**, duit. sends only:
 
-| Data | Why |
+| Data | Purpose |
 | --- | --- |
-| Category (Bug Report, Feature Request or General Feedback) | To sort feedback |
-| Your message (10–2,000 characters) | The feedback itself |
-| Your email address, **only if you enter one** | So the developer can reply |
-| The app version | To understand which version is affected |
-| A random installation ID created by duit. | To limit spam; it is not linked to your device hardware or accounts |
+| Category (`Bug Report`, `Feature Request`, or `General Feedback`) | Categorize feedback |
+| Your message (10–2,000 characters) | Feedback content |
+| Your email address (**only if you choose to provide it**) | Allows the developer to reply |
+| App version | Identify affected release |
+| Random per-install UUID | Rate limiting / spam prevention only (not linked to hardware/accounts and not stored in the sheet) |
 
-- Feedback is sent over HTTPS to a **Google Apps Script** web app run by the developer and stored in a **private Google Sheet** that only the developer can access. The date and time are added by the server.
-- The installation ID is not saved with your message. A scrambled (hashed) form of it, and of the message text, is held briefly (up to about one hour) to block floods and duplicate messages.
-- Nothing else is attached: no balances, transactions, backups, device logs or contacts.
-- Please don't include PINs, passwords or financial details in your message.
-- Because feedback is processed by Google, **Google's own privacy policy and terms also apply**, and Google may process technical data (such as your IP address) as part of providing the service.
+- Feedback is sent over HTTPS to a Google Apps Script web app (`feedback-backend/Code.gs`) and appended to a private Google Sheet accessible only to the developer.
+- Nothing else is attached: no wallet names, balances, transactions, receipts, backups, or device logs.
+- Please never enter PINs, passwords, or private financial details in feedback messages.
+- Because the backend runs on Google Apps Script, Google's own privacy policy applies to the HTTPS request (such as IP address handling at Google's infrastructure).
 
 ## 6. Update checks
 
-duit. checks `api.github.com` for new releases of the app and downloads updates from GitHub when you choose to install them. These requests contain no personal or financial information, but like visiting any website, **GitHub can see your phone's IP address** and basic request details. GitHub's privacy statement applies. Every download is checked (checksum and signing certificate) before Android asks you to confirm the install.
+Public releases (`com.diniy.duit.beta`) query `api.github.com` for releases under `erlingdiniy/duit-beta` and download verified APK files from GitHub when you choose **Update Now**. Update requests contain no financial or account data, though GitHub receives standard HTTP request metadata (such as your IP address) under GitHub's privacy statement. Downloaded APKs are verified against both their published SHA-256 digest and signing certificate before Android prompts you to install.
 
-## 7. Supporting the developer
+## 7. Developer Broadcasts (Public Edition)
 
-Settings → Support duit. shows the developer's DuitNow QR code (Touch 'n Go eWallet). Supporting duit. is entirely optional and unlocks nothing.
+Public releases (`com.diniy.duit.beta`) include Firebase Cloud Messaging (FCM) strictly to deliver optional announcement notifications from the developer (for example, critical beta notices):
 
-- Any payment happens **in your own banking or eWallet app**, under that provider's terms. duit. never sees, processes or records payments, and does not know whether you paid.
-- When you pay, your provider will show you the recipient's name, and the developer may see your name or account details as your provider normally shares them with a recipient.
-- "Save QR" saves a copy of the QR image to your phone's Pictures/duit. folder.
+- **Topic subscription only:** The app subscribes only to its release-channel topic (`duit_beta_broadcasts` for beta builds; `duit_announcements` for stable builds).
+- **Analytics disabled:** Both `firebase_analytics_collection_enabled` and `google_analytics_adid_collection_enabled` are explicitly disabled (`false`) in [`app/src/beta/AndroidManifest.xml`](../app/src/beta/AndroidManifest.xml).
+- **Zero financial or token uploads:** duit. never uploads FCM registration tokens, balances, transactions, or receipts to any developer server. Deep links inside broadcast notifications are restricted to an allowlisted internal screen list (`DeveloperBroadcastSpec`) and never open arbitrary URLs.
+- **Controls:** Broadcasts appear on the dedicated **Developer Broadcasts** Android notification channel (`VISIBILITY_PRIVATE` on the lock screen) and can be muted or turned off anytime in Android's system notification settings for duit.
+- Google Play Services / Firebase handles push delivery under Google's Firebase privacy terms. Offline personal/source builds (`com.diniy.duit`) omit the Firebase SDK completely.
 
-## 8. Permissions
+## 8. Supporting the developer
+
+Voluntary donations under **Settings -> Support duit.** are temporarily unavailable. New public releases do not bundle any payment QR code, recipient name, or payment processor. `duit.` stays 100% free and performs no payment tracking.
+
+## 9. Permissions (`com.diniy.duit.beta`)
 
 | Permission | Used for |
 | --- | --- |
-| Internet, network state | Update checks and sending feedback you choose to submit |
-| Install packages | Installing app updates, only after you confirm in Android's installer |
-| Biometric | Optional fingerprint unlock |
-| Notifications | Optional reminders for bills, budgets and savings |
-| Run at startup, wake lock, foreground service | Rescheduling reminders after a restart (used by Android's WorkManager) |
+| `INTERNET`, `ACCESS_NETWORK_STATE` | GitHub update checks, opt-in feedback submission, and FCM broadcasts (omitted in personal/offline builds) |
+| `REQUEST_INSTALL_PACKAGES` | Prompting Android's package installer for in-app updates after verification |
+| `com.google.android.c2dm.permission.RECEIVE` | Receiving FCM Developer Broadcasts (public edition only) |
+| `USE_BIOMETRIC` / `USE_FINGERPRINT` | Optional App Lock fingerprint/biometric unlock |
+| `POST_NOTIFICATIONS` | Local money reminders (bills, budgets, savings) and Developer Broadcasts |
+| `RECEIVE_BOOT_COMPLETED`, `WAKE_LOCK`, `FOREGROUND_SERVICE` | Re-scheduling local WorkManager reminders after device restart |
 
-duit. does not request access to your contacts, location, camera, microphone or files. Saving the QR image does not need a storage permission.
+Attaching receipts uses Android's system file/photo picker and camera intent without requesting broad gallery or external storage permissions. duit. never accesses your contacts, location, or microphone.
 
-## 9. Your choices and deleting your data
+## 10. Deleting your data
 
-- **Delete all financial data:** Settings → Data Management → Delete All Financial Data. This removes your records from the phone after you confirm, and cannot be undone. Your PIN and app settings are kept.
-- **Uninstall duit.:** removes everything the app stored in its private storage on your phone.
-- **Files you saved yourself** (backups, CSV exports, the saved QR image) stay until you delete them.
-- **Feedback already sent is not deleted** when you delete local data or uninstall the app. To ask for your feedback to be deleted, send a request through **Settings → Help & Feedback** (category: General Feedback). Include enough detail to find it (for example the date you sent it and the email you used). The developer will delete matching entries from the feedback sheet.
-- Data held by third parties (Google, GitHub, your payment provider) is kept under their own policies and is outside the app's direct control.
+- **Delete all financial data:** **Settings -> Data Management -> Delete All Financial Data** wipes local wallets, transactions, budgets, goals, obligations, tax records, challenges, and Receipt Vault files after confirmation (your PIN and UI settings are preserved).
+- **Uninstall duit.:** Removes the app database, preferences, keystore material, and private `filesDir/receipts/` folder from your device.
+- **External files you saved** (`.duitbackup` archives and CSV exports) remain wherever you stored them until you delete them.
+- **Feedback requests:** To request deletion of previously submitted feedback rows, submit a deletion request via **Settings -> Help & Feedback** referencing the approximate date and optional email address used.
 
-## 10. Children
+## 11. Changes & contact
 
-duit. is a general personal finance app and is not designed for children. It does not knowingly collect personal information from children.
-
-## 11. Changes to this policy
-
-When this policy changes, the updated version will be published in the duit. GitHub repository with a new effective date, and noted in the release notes.
-
-## 12. Contact
-
-The only contact channel is **Settings → Help & Feedback** in the app. Please do not post personal or financial information in public GitHub issues.
+Updates to this policy are published alongside releases in `erlingdiniy/duit` and `erlingdiniy/duit-beta`.  
+For support or privacy requests, please use **Settings -> Help & Feedback** inside the app and avoid posting personal financial data on public GitHub issues.
