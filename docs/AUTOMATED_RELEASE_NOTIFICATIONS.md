@@ -143,23 +143,49 @@ echo "GCP_SERVICE_ACCOUNT = ${SA_EMAIL}"
 
 ---
 
-## 4. Safe Verification Checklist (Post-Enablement)
+## 4. Production Status & Safe Verification Checklist
+
+- **Production Status (Phase 18A.3):** `ENABLE_LIVE_FCM_DISPATCH=true` on `erlingdiniy/duit-beta`. Published releases with `versionCode > 1002000` automatically verify APK integrity and dispatch FCM notifications once with no manual reviewer block on `fcm-release-notifications`; `v1.2.0` (`1002000`) and earlier releases remain permanently blocked.
 
 1. Run **Actions -> Automated Release Notifications -> Run workflow** with:
    - `release_tag`: `v1.2.0`
    - `dry_run`: `true`
    - `fcm_validate_only`: `false`
    - Confirm **`validate-and-plan`** verifies `duit-1.2.0.apk`, outputs `should_dispatch=false` (`skip_reason=below_or_equal_floor` or `preseeded_skip`), and skips `dispatch-notifications`.
-2. When ready to verify WIF/OIDC + FCM API connectivity without sending a real notification to any user, run `workflow_dispatch` with `release_tag: v1.2.0`, `dry_run: true`, `fcm_validate_only: true` and inspect the **`fcm-validate-only`** job logs (GitHub masks the short-lived `FCM_ACCESS_TOKEN`, verifies `validate_only: true` HTTP `200`, and sends zero notifications).
-3. On the next genuine prerelease (`v1.3.0-beta.1`) or patch release (`v1.2.1`), `release: published` will automatically validate the APK and dispatch once.
+2. To verify WIF/OIDC + FCM API connectivity without sending a real notification to any user, run `workflow_dispatch` with `release_tag: v1.2.0`, `dry_run: true`, `fcm_validate_only: true` and inspect the **`fcm-validate-only`** job logs (GitHub masks the short-lived `FCM_ACCESS_TOKEN`, verifies `validate_only: true` HTTP `200`, and sends zero notifications).
+3. On any future prerelease (`v1.3.0-beta.1`) or stable/patch release (`v1.2.1`), `release: published` will automatically validate the APK and dispatch once.
 
 ---
 
-## 5. Security Notes & Known Limitations
+## 5. Emergency Kill-Switch (Disable / Re-Enable Automation)
+
+Automated live notification dispatch is protected by a triple-lock kill-switch backed by the Repository Variable **`ENABLE_LIVE_FCM_DISPATCH`** (`validate-and-plan` forces `DRY_RUN=true`, `dispatch-notifications` job `if:` skips execution, and `run.mjs` fails closed unless `ALLOW_LIVE_FCM_DISPATCH === 'true'`).
+
+### Disable Immediately (Stop All Live Broadcasts)
+
+- **GitHub CLI:**
+  ```bash
+  gh variable set ENABLE_LIVE_FCM_DISPATCH --repo erlingdiniy/duit-beta --body "false"
+  ```
+- **GitHub Web UI:** Open `erlingdiniy/duit-beta` -> **Settings -> Secrets and variables -> Actions -> Variables** tab -> edit **`ENABLE_LIVE_FCM_DISPATCH`** -> set value to **`false`** -> **Update variable**.
+- **Optional additional block (if workflow needs complete pause):** **Actions -> Automated Release Notifications -> `...` -> Disable workflow**, or add a Required Reviewer to Environment **`fcm-release-notifications`**.
+
+### Re-Enable After Verification or Incident Review
+
+- **GitHub CLI:**
+  ```bash
+  gh variable set ENABLE_LIVE_FCM_DISPATCH --repo erlingdiniy/duit-beta --body "true"
+  ```
+- **GitHub Web UI:** Set Repository Variable **`ENABLE_LIVE_FCM_DISPATCH`** back to **`true`**.
+- **Pre-re-enable check:** Inspect `state/release-notifications.json` on branch `notification-state` for any `ambiguous` or `partial` entry before re-enabling, then verify cleanly with a `dry_run=true`, `fcm_validate_only=true` run on `v1.2.0`.
+
+---
+
+## 6. Security Notes & Known Limitations
 
 - **No long-lived keys:** Static Firebase Admin SDK JSON keys are never created or stored.
 - **No direct device token handling:** All targeting uses FCM topics; no registration tokens are read, stored, or logged.
-- **Kill-switch (`ENABLE_LIVE_FCM_DISPATCH`):** Live dispatch requires Repository Variable `ENABLE_LIVE_FCM_DISPATCH == 'true'` in addition to `dry_run=false`, `versionCode > 1002000`, and `notification-state` eligibility. Keep `ENABLE_LIVE_FCM_DISPATCH=false` until verification is approved.
+- **Kill-switch (`ENABLE_LIVE_FCM_DISPATCH`):** Live dispatch requires Repository Variable `ENABLE_LIVE_FCM_DISPATCH == 'true'` in addition to `dry_run=false`, `versionCode > 1002000`, and `notification-state` eligibility. Set `ENABLE_LIVE_FCM_DISPATCH=false` immediately if any anomaly is observed.
 - **`workflow_dispatch` with `dry_run=false` guardrail:** Restricted to repo admins (`erlingdiniy`) and locked behind GitHub Environment `fcm-release-notifications` (plus optional Required Reviewers), hard version floor `> 1002000`, and `notification-state` ledger checks so already-sent releases cannot be re-broadcast.
 - **Public distribution metadata:** Because `erlingdiniy/duit-beta` is public, `state/release-notifications.json` on branch `notification-state` is publicly readable and must contain only non-sensitive release metadata (tags, SHA-256 checksums, timestamps, topic names, sanitized error codes).
 
