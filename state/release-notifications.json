@@ -1,0 +1,141 @@
+{
+  "schemaVersion": 1,
+  "repository": "erlingdiniy/duit-beta",
+  "minExclusiveVersionCode": 1002000,
+  "updatedAt": "2026-11-25T10:05:00Z",
+  "releases": {
+    "v1.2.0": {
+      "tag": "v1.2.0",
+      "version": "1.2.0",
+      "versionCode": 1002000,
+      "channel": "stable",
+      "broadcastId": "duit-release-1.2.0",
+      "assetSha256": "e883b223504d684a0deac38acf903be149f6377f8215396a4326c43f6424075b",
+      "status": "preseeded_skip",
+      "note": "Initial Stable baseline seeded during Phase 18A setup; do not resend.",
+      "createdAt": "2026-11-25T09:24:20Z",
+      "updatedAt": "2026-11-25T10:05:00Z",
+      "topics": {}
+    },
+    "v1.2.0-beta.2": {
+      "tag": "v1.2.0-beta.2",
+      "version": "1.2.0-beta.2",
+      "versionCode": 1001902,
+      "channel": "beta",
+      "broadcastId": "duit-release-1.2.0-beta.2",
+      "assetSha256": "1d314949a9473475a115fb8d2c686b5ff2fc92ec647e87f88f8739ba50ae4f7d",
+      "status": "preseeded_skip",
+      "createdAt": "2026-11-23T12:32:30Z",
+      "updatedAt": "2026-11-25T10:05:00Z",
+      "topics": {}
+    },
+    "v1.2.0-beta.1": {
+      "tag": "v1.2.0-beta.1",
+      "version": "1.2.0-beta.1",
+      "versionCode": 1001901,
+      "channel": "beta",
+      "broadcastId": "duit-release-1.2.0-beta.1",
+      "assetSha256": null,
+      "status": "preseeded_skip",
+      "createdAt": "2026-11-21T03:56:56Z",
+      "updatedAt": "2026-11-25T10:05:00Z",
+      "topics": {}
+    },
+    "v1.1.1": {
+      "tag": "v1.1.1",
+      "version": "1.1.1",
+      "versionCode": 1001001,
+      "channel": "stable",
+      "broadcastId": "duit-release-1.1.1",
+      "assetSha256": null,
+      "status": "preseeded_skip",
+      "createdAt": "2026-11-20T09:03:17Z",
+      "updatedAt": "2026-11-25T10:05:00Z",
+      "topics": {}
+    },
+    "v1.1.0": {
+      "tag": "v1.1.0",
+      "version": "1.1.0",
+      "versionCode": 1001000,
+      "channel": "stable",
+      "broadcastId": "duit-release-1.1.0",
+      "assetSha256": null,
+      "status": "preseeded_skip",
+      "createdAt": "2026-11-19T11:41:42Z",
+      "updatedAt": "2026-11-25T10:05:00Z",
+      "topics": {}
+    },
+    "v1.0.0": {
+      "tag": "v1.0.0",
+      "version": "1.0.0",
+      "versionCode": 1000000,
+      "channel": "stable",
+      "broadcastId": "duit-release-1.0.0",
+      "assetSha256": "cd9aa2989c6b683b05a6da3cb5f655387824c164d09f1244005f11bb4b3bfd06",
+      "status": "preseeded_skip",
+      "createdAt": "2026-11-19T09:17:24Z",
+      "updatedAt": "2026-11-25T10:05:00Z",
+      "topics": {}
+    },
+    "beta-5": {
+      "tag": "beta-5",
+      "version": "0.1.0-beta.5",
+      "versionCode": 5,
+      "channel": "beta",
+      "broadcastId": "duit-release-beta-5",
+      "assetSha256": "e61b0491f20f4aa023374d1fe53171b1fc84e8cbe28b05da6524e7c2bf3103bd",
+      "status": "preseeded_skip",
+      "createdAt": "2026-11-19T09:17:20Z",
+      "updatedAt": "2026-11-25T10:05:00Z",
+      "topics": {}
+    },
+    "beta-4": {
+      "tag": "beta-4",
+      "version": "0.1.0-beta.4",
+      "versionCode": 4,
+      "channel": "beta",
+      "broadcastId": "duit-release-beta-4",
+      "assetSha256": "08c52014d8b99bdf6645e62633f6269bf2f691b2364238f9ec1f758fda9c4560c",
+      "status": "preseeded_skip",
+      "createdAt": "2026-11-19T08:59:54Z",
+      "updatedAt": "2026-11-25T10:05:00Z",
+      "topics": {}
+    },
+    "beta-3": {
+      "tag": "beta-3",
+      "version": "0.1.0-beta.3",
+      "versionCode": 3,
+      "channel": "beta",
+      "broadcastId": "duit-release-beta-3",
+      "assetSha256": "472ad8551a8dcc8b7bb3e4d422ef4146ee9e491458abc2ad8f910f7e30e79380",
+      "status": "preseeded_skip",
+      "createdAt": "2026-11-19T08:34:44Z",
+      "updatedAt": "2026-11-25T10:05:00Z",
+      "topics": {}
+    },
+    "beta-2": {
+      "tag": "beta-2",
+      "version": "0.1.0-beta.2",
+      "versionCode": 2,
+      "channel": "beta",
+      "broadcastId": "duit-release-beta-2",
+      "assetSha256": "46a5044c9c32effecb32b0ec1a52115018454ca14f2bac0f459aa7c3113a4eee",
+      "status": "preseeded_skip",
+      "createdAt": "2026-11-19T08:07:57Z",
+      "updatedAt": "2026-11-25T10:05:00Z",
+      "topics": {}
+    },
+    "beta-1": {
+      "tag": "beta-1",
+      "version": "0.1.0-beta.1",
+      "versionCode": 1,
+      "channel": "beta",
+      "broadcastId": "duit-release-beta-1",
+      "assetSha256": "d20d50222788d93667cf468d9c6ab526b967e7a4e47e9b034055ace3c3be8cfe",
+      "status": "preseeded_skip",
+      "createdAt": "2026-11-19T07:25:33Z",
+      "updatedAt": "2026-11-25T10:05:00Z",
+      "topics": {}
+    }
+  }
+}
