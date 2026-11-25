@@ -1,0 +1,282 @@
+name: Automated Release Notifications
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      release_tag:
+        description: "Release tag (leave empty for latest published non-draft release)"
+        required: false
+        type: string
+        default: ""
+      dry_run:
+        description: "Dry-run mode (validates release + builds payloads without sending)"
+        required: true
+        type: boolean
+        default: true
+      fcm_validate_only:
+        description: "In dry-run mode, also verify OIDC + FCM HTTP v1 validate_only without delivery"
+        required: false
+        type: boolean
+        default: false
+
+permissions: {}
+
+concurrency:
+  group: duit-release-notifications
+  cancel-in-progress: false
+
+jobs:
+  validate-and-plan:
+    name: Validate release & plan notifications
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+    outputs:
+      should_dispatch: ${{ steps.plan.outputs.should_dispatch }}
+      has_payloads: ${{ steps.plan.outputs.has_payloads }}
+      release_tag: ${{ steps.plan.outputs.release_tag }}
+      channel: ${{ steps.plan.outputs.channel }}
+      version_code: ${{ steps.plan.outputs.version_code }}
+      broadcast_id: ${{ steps.plan.outputs.broadcast_id }}
+      skip_reason: ${{ steps.plan.outputs.skip_reason }}
+      is_dry_run: ${{ steps.resolve.outputs.is_dry_run }}
+      fcm_validate_only: ${{ steps.resolve.outputs.fcm_validate_only }}
+      live_dispatch_enabled: ${{ steps.resolve.outputs.live_dispatch_enabled }}
+    steps:
+      - name: Check out automation scripts
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Set up Node.js 22
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: "22"
+
+      - name: Resolve trigger parameters
+        id: resolve
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          EVENT_TAG: ${{ github.event.release.tag_name }}
+          INPUT_TAG: ${{ inputs.release_tag }}
+          INPUT_DRY_RUN: ${{ inputs.dry_run }}
+          INPUT_VALIDATE_ONLY: ${{ inputs.fcm_validate_only }}
+          LIVE_DISPATCH_ENABLED: ${{ vars.ENABLE_LIVE_FCM_DISPATCH }}
+        run: |
+          if [ "$EVENT_NAME" = "release" ]; then
+            TAG="$EVENT_TAG"
+            DRY_RUN="false"
+            VALIDATE_ONLY="false"
+          else
+            TAG="$INPUT_TAG"
+            if [ "$INPUT_DRY_RUN" = "false" ]; then
+              DRY_RUN="false"
+            else
+              DRY_RUN="true"
+            fi
+            if [ "$INPUT_VALIDATE_ONLY" = "true" ] && [ "$DRY_RUN" = "true" ]; then
+              VALIDATE_ONLY="true"
+            else
+              VALIDATE_ONLY="false"
+            fi
+          fi
+          if [ "$LIVE_DISPATCH_ENABLED" != "true" ]; then
+            echo "[SAFE-MODE] Live FCM dispatch is disabled (ENABLE_LIVE_FCM_DISPATCH=${LIVE_DISPATCH_ENABLED:-unset}); forcing dry-run mode."
+            DRY_RUN="true"
+            LIVE_FLAG="false"
+          else
+            LIVE_FLAG="true"
+          fi
+          {
+            echo "target_tag=$TAG"
+            echo "is_dry_run=$DRY_RUN"
+            echo "fcm_validate_only=$VALIDATE_ONLY"
+            echo "live_dispatch_enabled=$LIVE_FLAG"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Fetch persistent dedup state read-only
+        id: fetch_state
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO: ${{ github.repository }}
+          IS_DRY_RUN: ${{ steps.resolve.outputs.is_dry_run }}
+        run: |
+          mkdir -p .tmp-state
+          HTTP_CODE=$(curl -sS -w "%{http_code}" -o .tmp-state/release-notifications.json \
+            -H "Accept: application/vnd.github.raw+json" \
+            -H "Authorization: Bearer $GITHUB_TOKEN" \
+            "https://api.github.com/repos/$REPO/contents/state/release-notifications.json?ref=notification-state")
+          if [ "$HTTP_CODE" = "200" ]; then
+            echo "Fetched state/release-notifications.json from notification-state branch."
+          elif [ "$IS_DRY_RUN" = "true" ]; then
+            echo "notification-state branch not initialized yet; using bundled seed for dry-run."
+            cp automation/release-notifications/state-seed/release-notifications.json .tmp-state/release-notifications.json
+          else
+            echo "::error::Missing notification-state branch/file (HTTP $HTTP_CODE). Live dispatch fails closed."
+            exit 1
+          fi
+
+      - name: Run validator & notification planner
+        id: plan
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO: ${{ github.repository }}
+          TARGET_TAG: ${{ steps.resolve.outputs.target_tag }}
+        run: |
+          TAG_ARG=()
+          if [ -n "$TARGET_TAG" ]; then
+            TAG_ARG=(--tag "$TARGET_TAG")
+          fi
+          node automation/release-notifications/run.mjs \
+            --mode plan \
+            --repo "$REPO" \
+            "${TAG_ARG[@]}" \
+            --state-file .tmp-state/release-notifications.json \
+            --github-output "$GITHUB_OUTPUT" \
+            --github-summary "$GITHUB_STEP_SUMMARY"
+
+  fcm-validate-only:
+    name: FCM validate_only dry-run (WIF/OIDC)
+    needs: validate-and-plan
+    if: >
+      needs.validate-and-plan.outputs.is_dry_run == 'true' &&
+      needs.validate-and-plan.outputs.fcm_validate_only == 'true' &&
+      needs.validate-and-plan.outputs.has_payloads == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    environment: fcm-release-notifications
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - name: Check out automation scripts
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Set up Node.js 22
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: "22"
+
+      - name: Authenticate to Google Cloud via OIDC
+        id: auth
+        uses: google-github-actions/auth@7c6bc770dae815cd3e89ee6cdf493a5fab2cc093 # v3
+        with:
+          workload_identity_provider: ${{ secrets.GCP_WIF_PROVIDER }}
+          service_account: ${{ secrets.GCP_SERVICE_ACCOUNT }}
+          token_format: access_token
+          access_token_scopes: https://www.googleapis.com/auth/firebase.messaging
+          access_token_lifetime: 300s
+          create_credentials_file: false
+
+      - name: Validate FCM HTTP v1 payloads without delivery
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          FCM_ACCESS_TOKEN: ${{ steps.auth.outputs.access_token }}
+          FIREBASE_PROJECT_ID: ${{ vars.FIREBASE_PROJECT_ID || 'duit-beta' }}
+          REPO: ${{ github.repository }}
+          TARGET_TAG: ${{ needs.validate-and-plan.outputs.release_tag }}
+        run: |
+          node automation/release-notifications/run.mjs \
+            --mode validate-fcm \
+            --repo "$REPO" \
+            --tag "$TARGET_TAG" \
+            --state-file automation/release-notifications/state-seed/release-notifications.json \
+            --github-summary "$GITHUB_STEP_SUMMARY"
+
+  dispatch-notifications:
+    name: Dispatch FCM release notifications
+    needs: validate-and-plan
+    if: >
+      vars.ENABLE_LIVE_FCM_DISPATCH == 'true' &&
+      needs.validate-and-plan.outputs.live_dispatch_enabled == 'true' &&
+      needs.validate-and-plan.outputs.is_dry_run == 'false' &&
+      needs.validate-and-plan.outputs.should_dispatch == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    environment: fcm-release-notifications
+    permissions:
+      contents: write
+      id-token: write
+    steps:
+      - name: Check out automation scripts
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Check out persistent dedup state branch
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: notification-state
+          path: .state-worktree
+          fetch-depth: 1
+
+      - name: Set up Node.js 22
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: "22"
+
+      - name: Authenticate to Google Cloud via OIDC
+        id: auth
+        uses: google-github-actions/auth@7c6bc770dae815cd3e89ee6cdf493a5fab2cc093 # v3
+        with:
+          workload_identity_provider: ${{ secrets.GCP_WIF_PROVIDER }}
+          service_account: ${{ secrets.GCP_SERVICE_ACCOUNT }}
+          token_format: access_token
+          access_token_scopes: https://www.googleapis.com/auth/firebase.messaging
+          access_token_lifetime: 300s
+          create_credentials_file: false
+
+      - name: Verify APK, check dedup state, and dispatch FCM HTTP v1
+        id: dispatch
+        continue-on-error: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          FCM_ACCESS_TOKEN: ${{ steps.auth.outputs.access_token }}
+          FIREBASE_PROJECT_ID: ${{ vars.FIREBASE_PROJECT_ID || 'duit-beta' }}
+          ALLOW_LIVE_FCM_DISPATCH: ${{ vars.ENABLE_LIVE_FCM_DISPATCH }}
+          REPO: ${{ github.repository }}
+          TARGET_TAG: ${{ needs.validate-and-plan.outputs.release_tag }}
+        run: |
+          node automation/release-notifications/run.mjs \
+            --mode dispatch \
+            --no-dry-run \
+            --require-state-file \
+            --repo "$REPO" \
+            --tag "$TARGET_TAG" \
+            --state-file .state-worktree/state/release-notifications.json \
+            --github-output "$GITHUB_OUTPUT" \
+            --github-summary "$GITHUB_STEP_SUMMARY"
+
+      - name: Commit updated dedup state to notification-state
+        if: always() && steps.dispatch.outputs.state_changed == 'true'
+        env:
+          TARGET_TAG: ${{ needs.validate-and-plan.outputs.release_tag }}
+        run: |
+          cd .state-worktree
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add state/release-notifications.json
+          if ! git diff --cached --quiet; then
+            git commit -m "Record notification dispatch state for $TARGET_TAG"
+            for attempt in 1 2 3; do
+              if git push origin HEAD:notification-state; then
+                exit 0
+              fi
+              echo "Push conflict on attempt $attempt; rebasing on notification-state..."
+              git fetch origin notification-state
+              git rebase origin/notification-state
+            done
+            echo "::error::Failed to push updated dedup state after 3 attempts."
+            exit 1
+          fi
+
+      - name: Fail job if FCM dispatch reported an error
+        if: always() && steps.dispatch.outcome != 'success'
+        run: |
+          echo "::error::FCM dispatch failed or completed partially. Check job summary and state/release-notifications.json before retrying."
+          exit 1
