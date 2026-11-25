@@ -1,7 +1,7 @@
 # duit. Privacy Policy
 
-**Effective date:** 23 November 2026  
-**Applies to:** the public duit. Android app (`com.diniy.duit.beta`), version `1.2.0-beta.1` and later, distributed through GitHub Releases (`erlingdiniy/duit-beta`). Personal builds built from source (`com.diniy.duit`) request no `INTERNET` permission and exclude Firebase entirely.
+**Effective date:** 25 November 2026  
+**Applies to:** the public duit. Android app (`com.diniy.duit.beta`), version `1.2.0` (Stable) and compatible public releases distributed through GitHub Releases (`erlingdiniy/duit-beta`). Personal builds built from source (`com.diniy.duit`) request no `INTERNET` permission and exclude Firebase entirely.
 
 duit. is a local-first personal finance app made by an independent developer (GitHub: **erlingdiniy**). This policy explains what the app stores on your device, what limited network connections the public release makes, and the controls you have.
 
@@ -67,9 +67,9 @@ Public releases (`com.diniy.duit.beta`) query `api.github.com` for releases unde
 
 ## 7. Developer Broadcasts (Public Edition)
 
-Public releases (`com.diniy.duit.beta`) include Firebase Cloud Messaging (FCM) strictly to deliver optional announcement notifications from the developer (for example, critical beta notices):
+Public releases (`com.diniy.duit.beta`) include Firebase Cloud Messaging (FCM) strictly to deliver optional announcement notifications from the developer (for example, critical release notices):
 
-- **Topic subscription only:** The app subscribes only to its release-channel topic (`duit_beta_broadcasts` for beta builds; `duit_announcements` for stable builds).
+- **Topic subscription only:** The app subscribes only to its active release-channel topic (`duit_beta_broadcasts` for beta builds; `duit_announcements` for stable builds), and automatically unsubscribes from the inactive topic when switching between channels.
 - **Analytics disabled:** Both `firebase_analytics_collection_enabled` and `google_analytics_adid_collection_enabled` are explicitly disabled (`false`) in [`app/src/beta/AndroidManifest.xml`](../app/src/beta/AndroidManifest.xml).
 - **Zero financial or token uploads:** duit. never uploads FCM registration tokens, balances, transactions, or receipts to any developer server. Deep links inside broadcast notifications are restricted to an allowlisted internal screen list (`DeveloperBroadcastSpec`) and never open arbitrary URLs.
 - **Controls:** Broadcasts appear on the dedicated **Developer Broadcasts** Android notification channel (`VISIBILITY_PRIVATE` on the lock screen) and can be muted or turned off anytime in Android's system notification settings for duit.
