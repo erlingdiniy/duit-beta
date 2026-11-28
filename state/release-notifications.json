@@ -2,8 +2,33 @@
   "schemaVersion": 1,
   "repository": "erlingdiniy/duit-beta",
   "minExclusiveVersionCode": 1002000,
-  "updatedAt": "2026-11-28T09:53:03.628Z",
+  "updatedAt": "2026-11-28T12:13:57.297Z",
   "releases": {
+    "v11.0.1": {
+      "tag": "v11.0.1",
+      "version": "11.0.1",
+      "versionCode": 11000001,
+      "channel": "stable",
+      "broadcastId": "duit-release-11.0.1",
+      "assetSha256": "0b1b2a4e35091ae17ffdafefe3c452a7887067ed2284fd7cb94da6339812c59e",
+      "status": "sent",
+      "createdAt": "2026-11-28T12:13:57.197Z",
+      "updatedAt": "2026-11-28T12:13:57.297Z",
+      "topics": {
+        "duit_announcements": {
+          "status": "sent",
+          "sentAt": "2026-11-28T12:13:57.197Z",
+          "messageId": "-5002747304473196804",
+          "attempts": 1
+        },
+        "duit_beta_broadcasts": {
+          "status": "sent",
+          "sentAt": "2026-11-28T12:13:57.297Z",
+          "messageId": "1718620005322302176",
+          "attempts": 1
+        }
+      }
+    },
     "v11.0.0": {
       "tag": "v11.0.0",
       "version": "11.0.0",
